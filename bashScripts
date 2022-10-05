@@ -1,0 +1,17 @@
+numLines=$2
+action=$1
+
+if [ $action == "a" ]
+then
+  for (( i=1; i<=$numLines; i++ ))
+  do 
+  touch "test${i}.in"
+  done
+elif [ $action == "d" ]
+then
+  for (( i=1; i<=$numLines; i++ ))
+  do 
+  rm "test${i}.in"
+  done
+fi
+

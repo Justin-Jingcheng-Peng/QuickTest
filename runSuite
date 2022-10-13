@@ -1,0 +1,106 @@
+#!/bin/bash
+suite=${1}
+programToTest=${2}
+programSample=${3}
+testProgramOutput=$(mktemp)
+sampleProgramOutput=$(mktemp)
+if [ "$#" != "3" ]; then
+    echo "Error: Incorrect number of arguments" >&2
+    exit 1
+fi
+for test in $(cat ${suite}); do
+    if [ $(ls | egrep "^${test}.args$" | wc -l) = "1" ]; then
+        if [ $(ls -l "${test}.args" | egrep "^.r" | wc -l) = "0" ]; then
+            echo "Error: ${test}.args file is not readable" >&2
+            exit 1
+        fi
+    fi
+    if [ $(ls | egrep "^${test}.in$" | wc -l) = "1" ]; then
+        if [ $(ls -l "${test}.in" | egrep "^.r" | wc -l) = "0" ]; then
+            echo "Error: ${test}.in file is not readable" >&2
+            exit 1
+        fi
+    fi
+    if [ $(ls | egrep "^${test}.args$" | wc -l) = "1" ]; then
+        if [ $(ls | egrep "^${test}.in$" | wc -l) = "1" ]; then
+            ## args present and in present
+            argument=$(cat "${test}.args")
+            stdIn="${test}.in"
+            "${programToTest}" $argument < ${stdIn} > ${testProgramOutput}
+            "${programSample}" $argument < ${stdIn} > ${sampleProgramOutput}
+            testOutput=$(cat ${testProgramOutput})
+            sampleOutput=$(cat ${sampleProgramOutput})
+            if [ "${sampleOutput}" != "${testOutput}" ]; then
+                echo "Test failed: ${test}"
+                echo "Args:"
+                echo "${argument}"
+                echo "Input:"
+                echo $(cat ${stdIn})
+                echo "Expected:"
+                echo "${sampleOutput}"
+                echo "Actual:"
+                echo "${testOutput}"
+            fi
+        else
+            ## arg present in does not present
+            argument=$(cat "${test}.args")
+            empty=$(mktemp)
+            "${programToTest}" $argument < $empty > ${testProgramOutput}
+            "${programSample}" $argument < $empty > ${sampleProgramOutput}
+            rm ${empty}
+            testOutput=$(cat ${testProgramOutput})
+            sampleOutput=$(cat ${sampleProgramOutput})
+            if [ "${sampleOutput}" != "${testOutput}" ]; then
+                echo "Test failed: ${test}"
+                echo "Args:"
+                echo "${argument}"
+                echo "Input:"
+                echo "Expected:"
+                echo "${sampleOutput}"
+                echo "Actual:"
+                echo "${testOutput}"
+            fi
+        fi
+    else 
+        
+        if [ $(ls | egrep "^${test}.in$" | wc -l) = "1" ]; then
+            ## Arg does not present, in present
+            stdIn="${test}.in"
+            "./${programToTest}" < ${stdIn} > ${testProgramOutput}
+            "./${programSample}" < ${stdIn} > ${sampleProgramOutput}
+            testOutput=$(cat ${testProgramOutput})
+            sampleOutput=$(cat ${sampleProgramOutput})
+            if [ "${sampleOutput}" != "${testOutput}" ]; then
+                echo "Test failed: ${test}"
+                echo "Args:"
+                echo "Input:"
+                echo $(cat ${stdIn})
+                echo "Expected:"
+                echo "${sampleOutput}"
+                echo "Actual:"
+                echo "${testOutput}"
+            fi
+        else
+            ## arg does not present, in does not present
+            empty=$(mktemp)
+            "./${programToTest}" < $empty > ${testProgramOutput}
+            "./${programSample}" < $empty > ${sampleProgramOutput}
+            rm ${empty}
+            testOutput=$(cat ${testProgramOutput})
+            sampleOutput=$(cat ${sampleProgramOutput})
+            if [ "${sampleOutput}" != "${testOutput}" ]; then
+                echo "Test failed: ${test}"
+                echo "Args:"
+                echo "Input:"
+                echo "Expected:"
+                echo "${sampleOutput}"
+                echo "Actual:"
+                echo "${testOutput}"
+            fi
+        fi
+
+    fi
+    
+done
+rm ${testProgramOutput}
+rm ${sampleProgramOutput}

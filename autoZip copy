@@ -1,0 +1,2 @@
+files=$(ls | egrep ".in$|.args$")
+zip a2q3.zip $files suiteq3.txt

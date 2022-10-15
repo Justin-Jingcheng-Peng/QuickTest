@@ -24,10 +24,8 @@ for test in $(cat ${suite}); do
     if [ $(ls | egrep "^${test}.args$" | wc -l) = "1" ]; then
         if [ $(ls | egrep "^${test}.in$" | wc -l) = "1" ]; then
             ## args present and in present
-            argument=$(cat "${test}.args")
-            stdIn="${test}.in"
-            "${programToTest}" $argument < ${stdIn} > ${testProgramOutput}
-            "${programSample}" $argument < ${stdIn} > ${sampleProgramOutput}
+            "./${programToTest}" "${test}.args"  > ${testProgramOutput}
+            "./${programSample}" "${test}.args"  > ${sampleProgramOutput}
             testOutput=$(cat ${testProgramOutput})
             sampleOutput=$(cat ${sampleProgramOutput})
             if [ "${sampleOutput}" != "${testOutput}" ]; then
